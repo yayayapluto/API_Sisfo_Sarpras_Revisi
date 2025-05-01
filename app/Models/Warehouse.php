@@ -16,4 +16,9 @@ class Warehouse extends Model
         "location",
         "capacity"
     ];
+
+    public function itemUnits()
+    {
+        return $this->hasMany(ItemUnit::class);
+    }
 }

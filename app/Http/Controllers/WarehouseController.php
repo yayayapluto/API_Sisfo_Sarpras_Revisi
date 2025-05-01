@@ -14,8 +14,7 @@ class WarehouseController extends Controller
     {
         $warehouseQuery = Warehouse::query();
         $validColumns = [
-            'id', 'name', 'location', 'capacity',
-            'created_at', 'updated_at', 'deleted_at'
+            'id', 'name', 'location', 'capacity'
         ];
 
         if (request()->filled('search')) {

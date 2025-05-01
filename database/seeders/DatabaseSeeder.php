@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Item;
+use App\Models\ItemUnit;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\Warehouse;
@@ -35,6 +36,9 @@ class DatabaseSeeder extends Seeder
 
         Item::query()->truncate();
         Item::factory(fake()->numberBetween(10, 20))->create();
+
+        ItemUnit::query()->truncate();
+        ItemUnit::factory(100)->create();
 
         DB::statement("SET FOREIGN_KEY_CHECKS = 1");
     }

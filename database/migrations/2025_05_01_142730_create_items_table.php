@@ -17,7 +17,7 @@ return new class extends Migration
             $table->enum("type", ["consumable", "non-consumable"]);
             $table->text("description")->nullable();
             $table->string("image_url")->nullable();
-            $table->foreignId("category_id")->constrained("categories");
+            $table->foreignId("category_id")->constrained("categories")->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });

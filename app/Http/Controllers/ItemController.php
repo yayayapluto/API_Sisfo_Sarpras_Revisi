@@ -17,7 +17,7 @@ class ItemController extends Controller
         $itemQuery = Item::query();
         $validColumns = [
             'id', 'name', 'type', 'description', 'image_url',
-            'qr_image_url', 'category_id', 'created_at', 'updated_at', 'deleted_at'
+            'qr_image_url', 'category_id'
         ];
         $validRelation = ["category"];
 
@@ -68,16 +68,19 @@ class ItemController extends Controller
             return Formatter::apiResponse(422, "Validation failed", null, $validator->errors()->all());
         }
 
-        if ($request->hasFile("image")) {
-            $imageFile = $request->file("image");
-            $pathName = "item-image";
-            $fileName = Formatter::makeDash("upload " . Carbon::now()->toDateTimeString()) . "." . $imageFile->getClientOriginalExtension();
-            $storedPath = $imageFile->storeAs($pathName, $fileName, "public");
-            $validated["image_url"] = url(Storage::url($storedPath));
-        }
-
         $validated = $validator->validated();
         $validated["category_id"] = Category::query()->select("id")->where("slug", $validated["category"])->pluck("id")->first();
+
+        if ($request->hasFile("image")) {
+            $imageFile = $request->file("image");
+            $path = "item-images";
+            $fileName = Formatter::makeDash($validated["name"] . " upload " . Carbon::now()->toDateString()) . "." . $imageFile->getClientOriginalExtension();
+            $storedPath = $imageFile->storeAs($path, $fileName, "public");
+            if (!$storedPath) {
+                return Formatter::apiResponse(400, "Cannot upload image, please try again later");
+            }
+            $validated["image_url"] = url(Storage::url($storedPath));
+        }
 
         $newItem = Item::query()->create($validated);
         return Formatter::apiResponse(200, "Item created", Item::query()->find($newItem->id)->load("category"));

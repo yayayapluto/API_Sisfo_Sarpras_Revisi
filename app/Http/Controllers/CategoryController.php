@@ -31,8 +31,7 @@ class CategoryController extends Controller
         }
 
         $validColumns = [
-            'id', 'slug', 'name', 'description',
-            'created_at', 'updated_at', 'deleted_at'
+            'id', 'slug', 'name', 'description'
         ];
 
         if (request()->filled('search')) {
