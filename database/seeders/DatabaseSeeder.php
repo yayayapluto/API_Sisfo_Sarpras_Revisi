@@ -3,10 +3,12 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\Item;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\Warehouse;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -16,6 +18,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::statement("SET FOREIGN_KEY_CHECKS = 0");
+
         User::query()->truncate();
         User::query()->create([
             'username' => "admin",
@@ -28,5 +32,10 @@ class DatabaseSeeder extends Seeder
 
         Warehouse::query()->truncate();
         Warehouse::factory(fake()->numberBetween(3, 5))->create();
+
+        Item::query()->truncate();
+        Item::factory(fake()->numberBetween(10, 20))->create();
+
+        DB::statement("SET FOREIGN_KEY_CHECKS = 1");
     }
 }

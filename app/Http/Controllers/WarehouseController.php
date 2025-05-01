@@ -27,7 +27,7 @@ class WarehouseController extends Controller
             });
         }
 
-        foreach (request()->except(['page', 'size', 'sortBy', 'sortDir', 'search']) as $key => $value) {
+        foreach (request()->except(['page', 'size', 'sortBy', 'sortDir', 'search', "with"]) as $key => $value) {
             if (in_array($key, $validColumns) && !empty($key)) {
                 $warehouseQuery->where($key, $value);
             }

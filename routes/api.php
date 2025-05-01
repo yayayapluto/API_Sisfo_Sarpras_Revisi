@@ -15,6 +15,7 @@ Route::middleware("need-token")->group(function () {
    Route::prefix("admin")->middleware("role:admin")->group(function () {
       Route::apiResource("categories", \App\Http\Controllers\CategoryController::class);
       Route::apiResource("warehouses", \App\Http\Controllers\WarehouseController::class);
+      Route::apiResource("items", \App\Http\Controllers\ItemController::class);
    });
 });
 

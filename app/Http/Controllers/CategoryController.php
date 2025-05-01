@@ -17,6 +17,19 @@ class CategoryController extends Controller
     {
         $categoryQuery = Category::query();
 
+        $validRelation = [
+            "items"
+        ];
+
+        if (\request()->filled("with")) {
+            $relations = explode(",", trim(\request()->with));
+            foreach ($relations as $relation) {
+                if (in_array($relation, $validRelation)) {
+                    $categoryQuery = $categoryQuery->with($relation);
+                }
+            }
+        }
+
         $validColumns = [
             'id', 'slug', 'name', 'description',
             'created_at', 'updated_at', 'deleted_at'
@@ -31,7 +44,7 @@ class CategoryController extends Controller
             });
         }
 
-        foreach (request()->except(['page', 'size', 'sortBy', 'sortDir', 'search']) as $key => $value) {
+        foreach (request()->except(['page', 'size', 'sortBy', 'sortDir', 'search',"with"]) as $key => $value) {
             if (in_array($key, $validColumns)) {
                 $categoryQuery->where($key, $value);
             }
@@ -83,7 +96,7 @@ class CategoryController extends Controller
      */
     public function show(string $slug)
     {
-        $category = Category::query()->where("slug", trim($slug))->first();
+        $category = Category::query()->with("items")->where("slug", trim($slug))->first();
         if (is_null($category)) {
             return Formatter::apiResponse(404, "Category not found");
         }
