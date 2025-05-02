@@ -17,6 +17,7 @@ Route::middleware("need-token")->group(function () {
       Route::apiResource("warehouses", \App\Http\Controllers\WarehouseController::class);
       Route::apiResource("items", \App\Http\Controllers\ItemController::class);
       Route::apiResource("itemUnits", \App\Http\Controllers\ItemUnitController::class);
+      Route::apiResource("logs", \App\Http\Controllers\LogActivityController::class)->only(["index","show"]);
    });
 });
 

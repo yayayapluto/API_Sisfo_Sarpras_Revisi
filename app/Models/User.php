@@ -47,4 +47,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function logActivities()
+    {
+        return $this->hasMany(LogActivity::class, "performed_by");
+    }
 }
