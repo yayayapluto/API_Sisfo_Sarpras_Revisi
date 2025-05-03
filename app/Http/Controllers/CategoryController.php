@@ -129,7 +129,7 @@ class CategoryController extends Controller
         }
 
         $category->update($validated);
-        return Formatter::apiResponse(200, "Category updated", Category::query()->find($category->id));
+        return Formatter::apiResponse(200, "Category updated", $category->getChanges());
     }
 
     /**

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('item_units', function (Blueprint $table) {
             $table->id();
-            $table->string("slug")->unique();
+            $table->string("sku")->unique();
             $table->string("condition");
             $table->text("notes")->nullable();
             $table->string("acquisition_source");

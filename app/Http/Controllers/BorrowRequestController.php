@@ -37,7 +37,8 @@ class BorrowRequestController extends Controller
         $validRelation = [
             "user",
             "approver",
-            "borrowDetails"
+            "borrowDetails",
+            "returnRequest"
         ];
 
         if (!is_null($this->currentUserId)) {
@@ -80,19 +81,7 @@ class BorrowRequestController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            "return_date_expected" => "required|date|after:today",
-            "notes" => "sometimes|string",
-            "sku.*" => "required|string|exists:item_units,sku"
-        ]);
-
-        if ($validator->fails()) {
-            return Formatter::apiResponse(422, "Validation failed", null, $validator->errors()->all());
-        }
-
-        $validated = $validator->validated();
-        $validated["user_id"] = $this->currentUserId;
-        dd($validated);
+        // nanti
     }
 
     /**
@@ -100,7 +89,7 @@ class BorrowRequestController extends Controller
      */
     public function show(int $id)
     {
-        $borrowRequestQuery = BorrowRequest::query()->with(["user","approver","borrowDetails"]);
+        $borrowRequestQuery = BorrowRequest::query()->with(["user","approver","borrowDetails","returnRequest"]);
 
         $borrowRequest = null;
         if (is_null($this->currentUserId)) {

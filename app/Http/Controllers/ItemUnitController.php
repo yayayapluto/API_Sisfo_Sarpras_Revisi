@@ -81,10 +81,15 @@ class ItemUnitController extends Controller
 
         $validated = $validator->validated();
 
-        // warehouse_id, item_id, slug, qr_image_url
         $warehouse = Warehouse::query()->find($request->warehouse);
         $item = Item::query()->find($request->item);
         $slug = Formatter::makeDash($warehouse->name) . "-" . Formatter::makeDash($item->name) . "-" . $item->itemUnits->sum('quantity') + 1;
+
+        if ($warehouse->quantity <= 0) {
+            return Formatter::apiResponse(400, "There is no space in this warehouse, pls change");
+        }
+
+        if ($item->type === "non-consumable") $validated["quantity"] = 1;
 
         $validated["warehouse_id"] = $warehouse->id;
         $validated["item_id"] = $item->id;
@@ -131,7 +136,7 @@ class ItemUnitController extends Controller
 
         $validated = $validator->validated();
         $itemUnit->update($validated);
-        return Formatter::apiResponse(200, "Item unit updated", $itemUnit);
+        return Formatter::apiResponse(200, "Item unit updated", $itemUnit->getChanges());
     }
 
     public function destroy(string $slug): JsonResponse

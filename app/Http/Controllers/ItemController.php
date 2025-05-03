@@ -16,7 +16,7 @@ class ItemController extends Controller
     {
         $itemQuery = Item::query();
         $validColumns = [
-            'id', 'name', 'type', 'description', 'image_url',
+            'name', 'type', 'image_url',
             'qr_image_url', 'category_id'
         ];
         $validRelation = ["category"];
@@ -117,7 +117,7 @@ class ItemController extends Controller
 
         $validated = $validator->validated();
         $item->update($validated);
-        return Formatter::apiResponse(200, "Item updated", $item);
+        return Formatter::apiResponse(200, "Item updated", $item->getChanges());
     }
 
     public function destroy(int $id)

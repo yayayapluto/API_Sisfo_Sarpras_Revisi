@@ -11,6 +11,11 @@ Route::prefix("auth")->group(function () {
    });
 });
 
+Route::apiResource("categories", \App\Http\Controllers\CategoryController::class)->only(["index","show"]);
+Route::apiResource("warehouses", \App\Http\Controllers\WarehouseController::class)->only(["index","show"]);
+Route::apiResource("items", \App\Http\Controllers\ItemController::class)->only(["index","show"]);
+Route::apiResource("itemUnits", \App\Http\Controllers\ItemUnitController::class)->only(["index","show"]);
+
 Route::middleware("need-token")->group(function () {
    Route::prefix("admin")->middleware("role:admin")->group(function () {
       Route::apiResource("categories", \App\Http\Controllers\CategoryController::class);
@@ -21,6 +26,10 @@ Route::middleware("need-token")->group(function () {
       Route::apiResource("borrow-requests", \App\Http\Controllers\BorrowRequestController::class)->only(["index","show"]);
       Route::patch("borrow-requests/{id}/approve", [\App\Http\Controllers\BorrowRequestController::class, "approve"]);
       Route::patch("borrow-requests/{id}/reject", [\App\Http\Controllers\BorrowRequestController::class, "reject"]);
+
+       Route::apiResource("return-requests", \App\Http\Controllers\ReturnRequestController::class)->only(["index","show"]);
+       Route::patch("return-requests/{id}/approve", [\App\Http\Controllers\ReturnRequestController::class, "approve"]);
+       Route::patch("return-requests/{id}/reject", [\App\Http\Controllers\ReturnRequestController::class, "reject"]);
 
       Route::apiResource("logs", \App\Http\Controllers\LogActivityController::class)->only(["index","show"]);
    });

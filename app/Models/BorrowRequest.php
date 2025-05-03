@@ -32,4 +32,9 @@ class BorrowRequest extends Model
     {
         return $this->hasMany(BorrowDetail::class);
     }
+
+    public function returnRequest()
+    {
+        return $this->hasOne(ReturnRequest::class);
+    }
 }

@@ -12,7 +12,7 @@ class ItemUnit extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        "slug",
+        "sku",
         "condition",
         "notes",
         "acquisition_source",
@@ -38,5 +38,10 @@ class ItemUnit extends Model
     public function borrowDetails()
     {
         return $this->hasMany(BorrowDetail::class);
+    }
+
+    public function returnDetails()
+    {
+        return $this->hasOne(ReturnDetail::class);
     }
 }
