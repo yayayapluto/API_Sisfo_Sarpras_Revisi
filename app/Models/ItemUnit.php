@@ -34,4 +34,9 @@ class ItemUnit extends Model
     {
         return $this->belongsTo(Warehouse::class);
     }
+
+    public function borrowDetails()
+    {
+        return $this->hasMany(BorrowDetail::class);
+    }
 }

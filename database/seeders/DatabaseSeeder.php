@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\BorrowDetail;
+use App\Models\BorrowRequest;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\ItemUnit;
@@ -27,6 +29,11 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make("admin123"),
             'role' => "admin",
         ]);
+        User::query()->create([
+            'username' => "user",
+            'password' => Hash::make("user123"),
+            'role' => "user",
+        ]);
 
         Category::query()->truncate();
         Category::factory(fake()->numberBetween(10, 20))->create();
@@ -39,6 +46,19 @@ class DatabaseSeeder extends Seeder
 
         ItemUnit::query()->truncate();
         ItemUnit::factory(100)->create();
+
+        BorrowRequest::query()->truncate();
+        BorrowRequest::factory(fake()->numberBetween(50, 100))->create();
+        $borrowRequests = BorrowRequest::all()->shuffle();
+        foreach ($borrowRequests as $borrowRequest) {
+            $itemUnit = ItemUnit::query()->get()->random();
+            $quantity = $itemUnit->type === "non-consumable" ? 1 : fake()->numberBetween(1, $itemUnit->quantity ?? 1);
+            BorrowDetail::query()->create([
+                "quantity" => $quantity,
+                "borrow_request_id" => $borrowRequest->id,
+                "item_unit_id" => $itemUnit->id
+            ]);
+        }
 
         DB::statement("SET FOREIGN_KEY_CHECKS = 1");
     }

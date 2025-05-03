@@ -52,4 +52,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(LogActivity::class, "performed_by");
     }
+
+    public function borowRequests()
+    {
+        return $this->hasMany(BorrowRequest::class);
+    }
+
+    public function approvals()
+    {
+        return $this->hasMany(BorrowRequest::class, "approved_by");
+    }
 }

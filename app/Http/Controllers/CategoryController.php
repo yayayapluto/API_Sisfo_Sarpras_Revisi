@@ -31,14 +31,13 @@ class CategoryController extends Controller
         }
 
         $validColumns = [
-            'id', 'slug', 'name', 'description'
+            'name', 'description'
         ];
 
         if (request()->filled('search')) {
             $searchTerm = '%' . request()->search . '%';
             $categoryQuery->where(function ($query) use ($searchTerm) {
                 $query->where('name', 'LIKE', $searchTerm)
-                    ->orWhere('slug', 'LIKE', $searchTerm)
                     ->orWhere('description', 'LIKE', $searchTerm);
             });
         }
