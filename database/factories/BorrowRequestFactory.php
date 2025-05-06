@@ -22,7 +22,7 @@ class BorrowRequestFactory extends Factory
             "return_date_expected" => Carbon::now()->addDays(fake()->numberBetween(1, 3)),
             "status" => fake()->randomElement(["pending","approved","rejected"]),
             "notes" => fake()->paragraph(),
-            "user_id" => User::query()->select("id")->inRandomOrder()->first(),
+            "user_id" => User::query()->select("id")->inRandomOrder()->where("role","user")->first(),
         ];
     }
 }

@@ -36,6 +36,7 @@ Route::middleware("need-token")->group(function () {
 
    Route::middleware("role:user")->group(function () {
        Route::apiResource("borrow-requests", \App\Http\Controllers\BorrowRequestController::class)->except(["update","destroy"]);
+       Route::apiResource("return-requests", \App\Http\Controllers\ReturnRequestController::class)->except(["update","destroy"]);
    });
 });
 

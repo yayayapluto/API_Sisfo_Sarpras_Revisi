@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Custom\Formatter;
+use App\Models\BorrowDetail;
+use App\Models\BorrowRequest;
+use App\Models\ReturnDetail;
 use App\Models\ReturnRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use function PHPUnit\Framework\isNull;
 
 class ReturnRequestController extends Controller
@@ -50,11 +55,11 @@ class ReturnRequestController extends Controller
 
         foreach (request()->except(['page', 'size', 'sortBy', 'sortDir', 'with']) as $key => $value) {
             if (in_array($key, $validColumns)) {
-                $returnRequestQuery->where($key, $value);
+                $returnRequestQuery->where($key, "return_requests." .$value);
             }
         }
 
-        $sortBy = in_array(request()->sortBy, $validColumns) ? request()->sortBy : 'created_at';
+        $sortBy = in_array(request()->sortBy, $validColumns) ? request()->sortBy : 'return_requests.created_at';
         $sortDir = strtolower(request()->sortDir) === 'desc' ? 'DESC' : 'ASC';
         $returnRequestQuery->orderBy($sortBy, $sortDir);
 
@@ -73,7 +78,54 @@ class ReturnRequestController extends Controller
      */
     public function store(Request $request)
     {
-        // nanti
+
+        $validator = Validator::make($request->all(), [
+            "borrow_request_id" => "required|integer|exists:borrow_requests,id",
+            "notes" => "sometimes|string"
+        ]);
+
+        if ($validator->fails()) {
+            return Formatter::apiResponse(422, "Validation failed", null, $validator->errors()->all());
+        }
+
+        $validated = $validator->validated();
+
+        DB::beginTransaction();
+        try {
+            $borrowRequest = BorrowRequest::query()->find($validated["borrow_request_id"]);
+            if ($borrowRequest->status !== "approved") {
+                DB::rollBack();
+                return Formatter::apiResponse(400, "why yo return pending/rejected borrow request LOL");
+            }
+
+            if (ReturnRequest::query()->where("borrow_request_id", $validated["borrow_request_id"])->where("status", "pending")->exists()) {
+                DB::rollBack();
+                return Formatter::apiResponse(400, "Please wait for your previous return request checked by admin");
+            }
+
+            if (!BorrowRequest::query()->where("user_id", $this->currentUserId)->find($validated["borrow_request_id"])) {
+                DB::rollBack();
+                return Formatter::apiResponse(400, "Tht borrow request not even yours");
+            }
+
+
+            $newReturnRequest = ReturnRequest::query()->create($validator->validated());
+
+            $borrowDetails = $borrowRequest->borrowDetails;
+            foreach ($borrowDetails as $borrowDetail) {
+                ReturnDetail::query()->create([
+                    "item_unit_id" => $borrowDetail->item_unit_id,
+                    "return_request_id" => $newReturnRequest->id
+                ]);
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Formatter::apiResponse(500, "Something wrong", null, $e->getMessage());
+        }
+
+        return Formatter::apiResponse(200, "Return request sent, please wait for admin approval", $newReturnRequest->load("returnDetails"));
     }
 
     /**
@@ -98,6 +150,17 @@ class ReturnRequestController extends Controller
     public function approve(int $id)
     {
         $returnRequest = ReturnRequest::query()->find($id);
+
+        if (is_null($returnRequest)) {
+            return Formatter::apiResponse(404, "Return request not found");
+        }
+
+        $borrowRequest = BorrowRequest::query()->find($returnRequest->borrowRequest->id);
+        $borrowDetails = $borrowRequest->borrowDetails;
+        foreach ($borrowDetails as $borrowDetail) {
+            $borrowDetail->status = "available";
+        }
+
         if (is_null($returnRequest)) {
             return Formatter::apiResponse(404, "Request request not found");
         }
@@ -113,6 +176,17 @@ class ReturnRequestController extends Controller
     public function reject(int $id)
     {
         $returnRequest = ReturnRequest::query()->find($id);
+
+        if (is_null($returnRequest)) {
+            return Formatter::apiResponse(404, "Return request not found");
+        }
+
+        $borrowRequest = BorrowRequest::query()->find($returnRequest->borrowRequest->id);
+        $borrowDetails = $borrowRequest->borrowDetails;
+        foreach ($borrowDetails as $borrowDetail) {
+            $borrowDetail->status = "unknown";
+        }
+
         if (is_null($returnRequest)) {
             return Formatter::apiResponse(404, "Request request not found");
         }

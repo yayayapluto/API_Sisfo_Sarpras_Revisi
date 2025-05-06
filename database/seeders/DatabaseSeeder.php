@@ -38,7 +38,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Category::query()->truncate();
-        Category::factory(fake()->numberBetween(10, 20))->create();
+        Category::factory(100)->create();
 
         Warehouse::query()->truncate();
         Warehouse::factory(fake()->numberBetween(3, 5))->create();
@@ -52,34 +52,35 @@ class DatabaseSeeder extends Seeder
         BorrowRequest::query()->truncate();
         BorrowDetail::query()->truncate();
         ReturnRequest::query()->truncate();
-        BorrowRequest::factory(fake()->numberBetween(50, 100))->create();
-        $borrowRequests = BorrowRequest::all()->shuffle();
-        foreach ($borrowRequests as $borrowRequest) {
-                $borrowDetailCount = rand(1, 10);
-                for ($i = 0; $i < $borrowDetailCount; $i++) {
-                    $itemUnit = ItemUnit::query()->get()->random();
-                    $quantity = $itemUnit->type === "non-consumable" ? 1 : fake()->numberBetween(1, $itemUnit->quantity ?? 1);
-                    BorrowDetail::query()->create([
-                        "quantity" => $quantity,
-                        "borrow_request_id" => $borrowRequest->id,
-                        "item_unit_id" => $itemUnit->id
-                    ]);
-                }
-            if ($borrowRequest->status === "approved") {
-                $returnRequest = ReturnRequest::query()->create([
-                    "notes" => fake()->paragraph(),
-                    "borrow_request_id" => $borrowRequest->id
-                ]);
-                $returnRequestCount = $borrowRequest->returnRequest->sum;
-                for ($j = 0; $j < $returnRequestCount; $j++) {
-                    ReturnDetail::query()->create([
-                        "condition" => "recent condition",
-                        "item_unit_id" => ItemUnit::query()->inRandomOrder()->first()->id,
-                        "return_request_id" => $returnRequest->id
-                    ]);
-                }
-            }
-        }
+        ReturnDetail::query()->truncate();
+//        BorrowRequest::factory(3)->create();
+//        $borrowRequests = BorrowRequest::all()->shuffle();
+//        foreach ($borrowRequests as $borrowRequest) {
+//                $borrowDetailCount = rand(1, 10);
+//                for ($i = 0; $i < $borrowDetailCount; $i++) {
+//                    $itemUnit = ItemUnit::query()->get()->random();
+//                    $quantity = $itemUnit->type === "non-consumable" ? 1 : fake()->numberBetween(1, $itemUnit->quantity ?? 1);
+//                    BorrowDetail::query()->create([
+//                        "quantity" => $quantity,
+//                        "borrow_request_id" => $borrowRequest->id,
+//                        "item_unit_id" => $itemUnit->id
+//                    ]);
+//                }
+//            if ($borrowRequest->status === "approved") {
+//                $returnRequest = ReturnRequest::query()->create([
+//                    "notes" => fake()->paragraph(),
+//                    "borrow_request_id" => $borrowRequest->id
+//                ]);
+//                $returnRequestCount = $borrowRequest->returnRequest->sum;
+//                for ($j = 0; $j < $returnRequestCount; $j++) {
+//                    ReturnDetail::query()->create([
+//                        "condition" => "recent condition",
+//                        "item_unit_id" => ItemUnit::query()->inRandomOrder()->first()->id,
+//                        "return_request_id" => $returnRequest->id
+//                    ]);
+//                }
+//            }
+//        }
 
         DB::statement("SET FOREIGN_KEY_CHECKS = 1");
     }

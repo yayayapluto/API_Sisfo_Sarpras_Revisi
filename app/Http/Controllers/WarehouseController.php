@@ -13,9 +13,18 @@ class WarehouseController extends Controller
     public function index(): JsonResponse
     {
         $warehouseQuery = Warehouse::query();
+
         $validColumns = [
             'id', 'name', 'location', 'capacity'
         ];
+
+        $validRelation = [
+            "itemUnits"
+        ];
+
+        if (\request()->filled("with")) {
+            $warehouseQuery = $warehouseQuery->with(\request()->with);
+        }
 
         if (request()->filled('search')) {
             $searchTerm = '%' . request()->search . '%';
@@ -26,7 +35,7 @@ class WarehouseController extends Controller
             });
         }
 
-        foreach (request()->except(['page', 'size', 'sortBy', 'sortDir', 'search', "with"]) as $key => $value) {
+        foreach (request()->except(['page', 'size', 'sortBy', 'sortDir', 'search', "with", "with"]) as $key => $value) {
             if (in_array($key, $validColumns) && !empty($key)) {
                 $warehouseQuery->where($key, $value);
             }
@@ -61,7 +70,7 @@ class WarehouseController extends Controller
 
     public function show(int $id)
     {
-        $warehouse = Warehouse::find($id);
+        $warehouse = Warehouse::query()->with("itemUnits")->find($id);
         if (is_null($warehouse)) {
             return Formatter::apiResponse(404, "Warehouse not found");
         }

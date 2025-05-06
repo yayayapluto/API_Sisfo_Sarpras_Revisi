@@ -71,7 +71,7 @@ class CategoryController extends Controller
     {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             "name" => "required|string|min:5",
-            "description" => "sometimes|string"
+            "description" => "sometimes"
         ]);
 
         if ($validator->fails()) {
@@ -113,7 +113,7 @@ class CategoryController extends Controller
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             "name" => "sometimes|string|min:5",
-            "description" => "sometimes|string"
+            "description" => "sometimes"
         ]);
 
         if ($validator->fails()) {
@@ -123,8 +123,10 @@ class CategoryController extends Controller
         $validated = $validator->validated();
         if (isset($validated["name"])) {
             $validated["slug"] = Formatter::makeDash($validated["name"]);
-            if (Category::query()->where("slug", $validated["slug"])->exists()) {
-                return Formatter::apiResponse(400, "Category already exists");
+            if ($slug !== $validated["slug"]) {
+                if (Category::query()->where("slug", $validated["slug"])->exists()) {
+                    return Formatter::apiResponse(400, "Category already exists");
+                }
             }
         }
 

@@ -5,10 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use App\Models\ItemUnit;
 use App\Models\Warehouse;
+use BaconQrCode\Renderer\GDLibRenderer;
+use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Custom\Formatter;
+use Endroid\QrCode\QrCode;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ItemUnitController extends Controller
 {
@@ -34,7 +42,7 @@ class ItemUnitController extends Controller
         if (\request()->filled("search")) {
             $searchTerm = '%' . \request()->search . '%';
             $itemUnitQuery->where(function ($query) use ($searchTerm) {
-                $query->where('slug', 'LIKE', $searchTerm)
+                $query->where('sku', 'LIKE', $searchTerm)
                     ->orWhere('condition', 'LIKE', $searchTerm)
                     ->orWhere('notes', 'LIKE', $searchTerm)
                     ->orWhere('acquisition_source', 'LIKE', $searchTerm)
@@ -81,43 +89,69 @@ class ItemUnitController extends Controller
 
         $validated = $validator->validated();
 
-        $warehouse = Warehouse::query()->find($request->warehouse);
-        $item = Item::query()->find($request->item);
-        $slug = Formatter::makeDash($warehouse->name) . "-" . Formatter::makeDash($item->name) . "-" . $item->itemUnits->sum('quantity') + 1;
+        DB::beginTransaction();
+        try {
+            $warehouse = Warehouse::query()->find($request->warehouse);
+            $item = Item::query()->find($request->item);
+            $sku = Formatter::makeDash($warehouse->name) . "-" . Formatter::makeDash($item->name) . "-" . ($item->itemUnits->sum('quantity') + 1);
 
-        if ($warehouse->quantity <= 0) {
-            return Formatter::apiResponse(400, "There is no space in this warehouse, pls change");
+            if ($warehouse->capacity <= 0) {
+                DB::rollBack();
+                return Formatter::apiResponse(400, "There is no space in this warehouse, please change");
+            }
+
+            if ($item->type === "non-consumable") $validated["quantity"] = 1;
+
+            $validated["warehouse_id"] = $warehouse->id;
+            $validated["item_id"] = $item->id;
+            $validated["sku"] = $sku;
+
+            if (!Storage::disk('public')->exists('qr-images')) {
+                Storage::disk('public')->makeDirectory('qr-images');
+            }
+
+            $renderer = new GDLibRenderer(400);
+            $qrCode = new \BaconQrCode\Writer($renderer);
+
+            $qrCodePath = 'qr-images/' . $sku . '.png';
+
+            $qrValue = url('/api/admin/itemUnits/' . $sku);
+            $qrCode->writeFile($qrValue, storage_path('app/public/' . $qrCodePath));
+
+            $validated["qr_image_url"] = url(Storage::url($qrCodePath));
+
+            $newItemUnit = ItemUnit::query()->create($validated);
+            $warehouse->update([
+                "capacity" => $warehouse->capacity - 1
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Formatter::apiResponse(500, "Something went wrong", null, $e->getMessage());
         }
 
-        if ($item->type === "non-consumable") $validated["quantity"] = 1;
-
-        $validated["warehouse_id"] = $warehouse->id;
-        $validated["item_id"] = $item->id;
-        $validated["slug"] = $slug;
-        $validated["qr_image_url"] = "will be generated";
-
-        $newItemUnit = ItemUnit::query()->create($validated);
         return Formatter::apiResponse(200, "Item unit created", ItemUnit::query()->find($newItemUnit->id)->load(["item", "warehouse"]));
     }
 
-    public function show(string $slug): JsonResponse
+    public function show(string $sku): JsonResponse
     {
-        $itemUnit = ItemUnit::query()->with(["item", "warehouse"])->where("slug", $slug)->first();
+        $itemUnit = ItemUnit::query()->with(["item", "warehouse"])->where("sku", $sku)->first();
         if (is_null($itemUnit)) {
             return Formatter::apiResponse(404, "Item unit not found");
         }
         return Formatter::apiResponse(200, "Item unit found", $itemUnit);
     }
 
-    public function update(Request $request, string $slug): JsonResponse
+    public function update(Request $request, string $sku): JsonResponse
     {
-        $itemUnit = ItemUnit::query()->where("slug", $slug)->first();
+        $itemUnit = ItemUnit::query()->where("sku", $sku)->first();
         if (is_null($itemUnit)) {
             return Formatter::apiResponse(404, "Item unit not found");
         }
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            "slug" => "sometimes|string|unique:item_units,slug," . $itemUnit->id,
+            "sku" => "sometimes|string|unique:item_units,sku," . $itemUnit->id,
             "condition" => "sometimes|string",
             "notes" => "sometimes|string",
             "acquisition_source" => "sometimes|string",
@@ -139,9 +173,9 @@ class ItemUnitController extends Controller
         return Formatter::apiResponse(200, "Item unit updated", $itemUnit->getChanges());
     }
 
-    public function destroy(string $slug): JsonResponse
+    public function destroy(string $sku): JsonResponse
     {
-        $itemUnit = ItemUnit::query()->where("slug", $slug)->first();
+        $itemUnit = ItemUnit::query()->where("sku", $sku)->first();
         if (is_null($itemUnit)) {
             return Formatter::apiResponse(404, "Item unit not found");
         }

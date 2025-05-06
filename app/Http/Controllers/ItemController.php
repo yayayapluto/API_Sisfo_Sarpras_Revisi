@@ -57,8 +57,8 @@ class ItemController extends Controller
     public function store(Request $request)
     {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            "name" => "required|string|min:3",
-            "type" => "required|string",
+            "name" => "required|string|min:3|unique:items,name",
+            "type" => "required|string|in:consumable,non-consumable",
             "description" => "sometimes|string",
             "image" => "sometimes|image",
             "category" => "required|exists:categories,slug"
