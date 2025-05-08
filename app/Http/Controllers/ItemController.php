@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class ItemController extends Controller
 {
@@ -61,7 +62,7 @@ class ItemController extends Controller
             "type" => "required|string|in:consumable,non-consumable",
             "description" => "sometimes|string",
             "image" => "sometimes|image",
-            "category" => "required|exists:categories,slug"
+            "category_slug" => "required|exists:categories,slug"
         ]);
 
         if ($validator->fails()) {
@@ -69,7 +70,7 @@ class ItemController extends Controller
         }
 
         $validated = $validator->validated();
-        $validated["category_id"] = Category::query()->select("id")->where("slug", $validated["category"])->pluck("id")->first();
+        $validated["category_id"] = Category::query()->select("id")->where("slug", $validated["category_slug"])->pluck("id")->first();
 
         if ($request->hasFile("image")) {
             $imageFile = $request->file("image");
@@ -88,7 +89,7 @@ class ItemController extends Controller
 
     public function show(int $id)
     {
-        $item = Item::query()->with("category")->find($id);
+        $item = Item::query()->with(["category", "itemUnits.item", "itemUnits.warehouse"])->find($id);
         if (is_null($item)) {
             return Formatter::apiResponse(404, "Item not found");
         }
@@ -106,9 +107,8 @@ class ItemController extends Controller
             "name" => "sometimes|string|min:3",
             "type" => "sometimes|string",
             "description" => "sometimes|string",
-            "image_url" => "sometimes|url",
-            "qr_image_url" => "sometimes|url",
-            "category_id" => "sometimes|exists:categories,id"
+            "category_slug" => "sometimes|exists:categories,slug",
+            "image" => "sometimes|image"
         ]);
 
         if ($validator->fails()) {
@@ -116,8 +116,26 @@ class ItemController extends Controller
         }
 
         $validated = $validator->validated();
+        if ($request->hasFile("image")) {
+            if (\request()->hasFile("image")) {
+                $imageFile = \request()->file("image");
+                $path = "item-images";
+                $fileName = Formatter::makeDash($item->name . " upload " . Carbon::now()->toDateString()) . "." . $imageFile->getClientOriginalExtension();
+                $storedPath = $imageFile->storeAs($path, $fileName, "public");
+                if (!$storedPath) {
+                    return Formatter::apiResponse(400, "Cannot upload image, please try again later");
+                }
+
+                $validated["image_url"] = url(Storage::url($storedPath));
+            }
+        }
+
+        if ($request->has("category")) {
+            $validated["category_id"] = Category::query()->select("id")->where("slug", $validated["category_slug"])->pluck("id")->first();
+        }
+
         $item->update($validated);
-        return Formatter::apiResponse(200, "Item updated", $item->getChanges());
+        return Formatter::apiResponse(200, "Item updated", Item::query()->find($item->id));
     }
 
     public function destroy(int $id)
@@ -128,5 +146,38 @@ class ItemController extends Controller
         }
         $item->delete();
         return Formatter::apiResponse(200, "Item deleted");
+    }
+
+    public function updateImage(int $id)
+    {
+        $item = Item::query()->find($id);
+        if (is_null($item)) {
+            return Formatter::apiResponse(404, "Item not found");
+        }
+
+        $validator = Validator::make(\request()->all(), [
+            "image" => "required|image"
+        ]);
+
+        if ($validator->fails()) {
+            return Formatter::apiResponse(422, "Validation failed", null, $validator->errors()->all());
+        }
+
+        $validated = $validator->validated();
+
+        if (\request()->hasFile("image")) {
+            $imageFile = \request()->file("image");
+            $path = "item-images";
+            $fileName = Formatter::makeDash($item->name . " upload " . Carbon::now()->toDateString()) . "." . $imageFile->getClientOriginalExtension();
+            $storedPath = $imageFile->storeAs($path, $fileName, "public");
+            if (!$storedPath) {
+                return Formatter::apiResponse(400, "Cannot upload image, please try again later");
+            }
+
+            $validated["image_url"] = url(Storage::url($storedPath));
+        }
+
+        $item->update($validated);
+        return Formatter::apiResponse(200, "Image updated", Item::query()->find($item->id));
     }
 }

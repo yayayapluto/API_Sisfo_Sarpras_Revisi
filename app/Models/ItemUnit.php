@@ -30,7 +30,7 @@ class ItemUnit extends Model
         return $this->belongsTo(Item::class);
     }
 
-    public function Warehouse()
+    public function warehouse()
     {
         return $this->belongsTo(Warehouse::class);
     }

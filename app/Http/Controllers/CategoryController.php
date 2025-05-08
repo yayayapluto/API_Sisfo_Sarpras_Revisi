@@ -21,6 +21,11 @@ class CategoryController extends Controller
             "items"
         ];
 
+        if (\request()->filled("columns")) {
+            $columns = explode(',', \request()->columns);
+            $categoryQuery->select($columns);
+        }
+
         if (\request()->filled("with")) {
             $relations = explode(",", trim(\request()->with));
             foreach ($relations as $relation) {
@@ -37,8 +42,7 @@ class CategoryController extends Controller
         if (request()->filled('search')) {
             $searchTerm = '%' . request()->search . '%';
             $categoryQuery->where(function ($query) use ($searchTerm) {
-                $query->where('name', 'LIKE', $searchTerm)
-                    ->orWhere('description', 'LIKE', $searchTerm);
+                $query->where('name', 'LIKE', $searchTerm);
             });
         }
 
@@ -94,7 +98,7 @@ class CategoryController extends Controller
      */
     public function show(string $slug)
     {
-        $category = Category::query()->with("items")->where("slug", trim($slug))->first();
+        $category = Category::query()->with("items.category")->where("slug", trim($slug))->first();
         if (is_null($category)) {
             return Formatter::apiResponse(404, "Category not found");
         }
@@ -131,7 +135,7 @@ class CategoryController extends Controller
         }
 
         $category->update($validated);
-        return Formatter::apiResponse(200, "Category updated", $category->getChanges());
+        return Formatter::apiResponse(200, "Category updated", Category::query()->find($category->id));
     }
 
     /**

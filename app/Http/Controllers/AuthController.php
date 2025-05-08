@@ -29,7 +29,10 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken("auth_token")->plainTextToken;
-        return Formatter::apiResponse(200, "Logged in", $token);
+        return Formatter::apiResponse(200, "Logged in", [
+            "token" => $token,
+            "role" => $user->role
+        ]);
     }
 
     public function logout()
@@ -40,6 +43,6 @@ class AuthController extends Controller
 
     public function self()
     {
-        return Formatter::apiResponse(200, "Self auth data", Auth::guard("sanctum")->user());
+        return Formatter::apiResponse(200, "Self auth data received", Auth::guard("sanctum")->user());
     }
 }

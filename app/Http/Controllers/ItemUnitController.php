@@ -24,9 +24,9 @@ class ItemUnitController extends Controller
     {
         $itemUnitQuery = ItemUnit::query();
         $validColumns = [
-            'condition', 'acquisition_source',
+            'sku', 'condition', 'acquisition_source',
             'acquisition_date', 'status', 'quantity',
-            'item_id', 'warehouse_id'
+            'item_id', 'warehouse_id', 'created_at'
         ];
         $validRelation = ["item", "warehouse"];
 
@@ -79,8 +79,8 @@ class ItemUnitController extends Controller
             "acquisition_date" => "required|date",
             "acquisition_notes" => "sometimes|string",
             "quantity" => "required|integer|min:1",
-            "item" => "required|exists:items,id",
-            "warehouse" => "required|exists:warehouses,id"
+            "item_id" => "required|integer|exists:items,id",
+            "warehouse_id" => "required|integer|exists:warehouses,id"
         ]);
 
         if ($validator->fails()) {
@@ -91,8 +91,8 @@ class ItemUnitController extends Controller
 
         DB::beginTransaction();
         try {
-            $warehouse = Warehouse::query()->find($request->warehouse);
-            $item = Item::query()->find($request->item);
+            $warehouse = Warehouse::query()->find($request->warehouse_id);
+            $item = Item::query()->find($request->item_id);
             $sku = Formatter::makeDash($warehouse->name) . "-" . Formatter::makeDash($item->name) . "-" . ($item->itemUnits->sum('quantity') + 1);
 
             if ($warehouse->capacity <= 0) {
@@ -102,8 +102,6 @@ class ItemUnitController extends Controller
 
             if ($item->type === "non-consumable") $validated["quantity"] = 1;
 
-            $validated["warehouse_id"] = $warehouse->id;
-            $validated["item_id"] = $item->id;
             $validated["sku"] = $sku;
 
             if (!Storage::disk('public')->exists('qr-images')) {
@@ -136,7 +134,7 @@ class ItemUnitController extends Controller
 
     public function show(string $sku): JsonResponse
     {
-        $itemUnit = ItemUnit::query()->with(["item", "warehouse"])->where("sku", $sku)->first();
+        $itemUnit = ItemUnit::query()->with(["item.category", "warehouse"])->where("sku", $sku)->first();
         if (is_null($itemUnit)) {
             return Formatter::apiResponse(404, "Item unit not found");
         }

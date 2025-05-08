@@ -70,7 +70,7 @@ class WarehouseController extends Controller
 
     public function show(int $id)
     {
-        $warehouse = Warehouse::query()->with("itemUnits")->find($id);
+        $warehouse = Warehouse::query()->with("itemUnits.item", "itemUnits.warehouse")->find($id);
         if (is_null($warehouse)) {
             return Formatter::apiResponse(404, "Warehouse not found");
         }
@@ -96,7 +96,7 @@ class WarehouseController extends Controller
 
         $validated = $validator->validated();
         $warehouse->update($validated);
-        return Formatter::apiResponse(200, "Warehouse updated", $warehouse->getChanges());
+        return Formatter::apiResponse(200, "Warehouse updated", Warehouse::query()->find($warehouse->id));
     }
 
     public function destroy(int $id)

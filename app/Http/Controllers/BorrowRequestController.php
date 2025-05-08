@@ -147,12 +147,11 @@ class BorrowRequestController extends Controller
     {
         $borrowRequestQuery = BorrowRequest::query()->with(["user","approver","borrowDetails.itemUnit","returnRequest"]);
 
-        if (is_null($this->currentUserId)) {
+        if (!is_null($this->currentUserId)) {
             $borrowRequestQuery->where("user_id", $this->currentUserId);
         }
 
         $borrowRequest = $borrowRequestQuery->find($id);
-
 
         if (is_null($borrowRequest)) {
             return Formatter::apiResponse(404, "Borrow request not found");

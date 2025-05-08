@@ -18,9 +18,13 @@ Route::apiResource("itemUnits", \App\Http\Controllers\ItemUnitController::class)
 
 Route::middleware("need-token")->group(function () {
    Route::prefix("admin")->middleware("role:admin")->group(function () {
+      Route::apiResource("users", \App\Http\Controllers\UserController::class);
       Route::apiResource("categories", \App\Http\Controllers\CategoryController::class);
       Route::apiResource("warehouses", \App\Http\Controllers\WarehouseController::class);
-      Route::apiResource("items", \App\Http\Controllers\ItemController::class);
+
+      Route::apiResource("items", \App\Http\Controllers\ItemController::class)->except(["update"]);
+      Route::post("items/{id}", [\App\Http\Controllers\ItemController::class, "update"]);
+
       Route::apiResource("itemUnits", \App\Http\Controllers\ItemUnitController::class);
 
       Route::apiResource("borrow-requests", \App\Http\Controllers\BorrowRequestController::class)->only(["index","show"]);
