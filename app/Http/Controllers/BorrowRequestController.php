@@ -34,12 +34,12 @@ class BorrowRequestController extends Controller
             "return_date_expected",
             "status",
             "user_id",
-            "approved_by"
+            "handled_by"
         ];
 
         $validRelation = [
             "user",
-            "approver",
+            "handler",
             "borrowDetails",
             "returnRequest"
         ];
@@ -72,11 +72,7 @@ class BorrowRequestController extends Controller
         $size = min(max(request()->size ?? 10, 1), 100);
         $borrowRequests = $borrowRequestQuery->simplePaginate($size);
 
-        return response()->json([
-            'status' => 200,
-            'message' => 'Borrow request list retrieved',
-            'data' => $borrowRequests
-        ]);
+        return Formatter::apiResponse(200, "Borrow Requests list retrieved", $borrowRequests);
     }
 
     /**
@@ -145,7 +141,7 @@ class BorrowRequestController extends Controller
      */
     public function show(int $id)
     {
-        $borrowRequestQuery = BorrowRequest::query()->with(["user","approver","borrowDetails.itemUnit","returnRequest"]);
+        $borrowRequestQuery = BorrowRequest::query()->with(["user","handler","borrowDetails.itemUnit.item","returnRequest"]);
 
         if (!is_null($this->currentUserId)) {
             $borrowRequestQuery->where("user_id", $this->currentUserId);
@@ -178,7 +174,7 @@ class BorrowRequestController extends Controller
 
         $borrowRequest->update([
             "status" => "approved",
-            "approved_by" => Auth::guard("sanctum")->user()->id
+            "handled_by" => Auth::guard("sanctum")->user()->id
         ]);
         return Formatter::apiResponse(200, "Borrow request approved", $borrowRequest->getChanges());
     }
@@ -193,7 +189,8 @@ class BorrowRequestController extends Controller
             return Formatter::apiResponse(400, "Borrow request already rejected");
         }
         $borrowRequest->update([
-            "status" => "rejected"
+            "status" => "rejected",
+            "handled_by" => Auth::guard("sanctum")->user()->id
         ]);
         return Formatter::apiResponse(200, "Borrow request rejected", $borrowRequest->getChanges());
     }

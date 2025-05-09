@@ -60,6 +60,6 @@ class User extends Authenticatable
 
     public function approvals()
     {
-        return $this->hasMany(BorrowRequest::class, "approved_by");
+        return $this->hasMany(BorrowRequest::class, "handled_by");
     }
 }

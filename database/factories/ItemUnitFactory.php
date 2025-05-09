@@ -14,7 +14,7 @@ class ItemUnitFactory extends Factory
     public function definition(): array
     {
         $item = Item::query()->inRandomOrder()->first();
-        $slug = Formatter::makeDash($item->name . " unit " . $this->faker->unique()->slug);
+        $sku = Formatter::makeDash($item->name . " unit " . $this->faker->unique()->slug());
         $quantity = $item->type === "non-consumable" ? 1 : $this->faker->numberBetween(1, 12);
 
         if (!Storage::disk('public')->exists('qr-images')) {
@@ -24,22 +24,22 @@ class ItemUnitFactory extends Factory
         $renderer = new GDLibRenderer(400);
         $qrCode = new \BaconQrCode\Writer($renderer);
 
-        $qrCodePath = 'qr-images/' . $slug . '.png';
+        $qrCodePath = 'qr-images/' . $sku . '.png';
 
-        $qrValue = url('/api/admin/itemUnits/' . $slug);
+        $qrValue = env('FE_URL') . "/" . $sku;
         $qrCode->writeFile($qrValue, storage_path('app/public/' . $qrCodePath));
 
-//        $qr_image_url = url(Storage::url($qrCodePath));
-        $qr_image_url = env('APP_URL_X') . Storage::url($qrCodePath);
+       $qr_image_url = url(Storage::url($qrCodePath));
+        // $qr_image_url = env('APP_URL') . Storage::url($qrCodePath);
 
         return [
-            'sku' => $slug,
+            'sku' => $sku,
             'condition' => $this->faker->word,
             'notes' => $this->faker->text,
             'acquisition_source' => $this->faker->company,
             'acquisition_date' => $this->faker->date,
             'acquisition_notes' => $this->faker->text,
-            'status' => $this->faker->randomElement(['available', 'borrowed', 'unknown']),
+            'status' => "available",
             'quantity' => $quantity,
             'qr_image_url' => $qr_image_url,
             'item_id' => $item->id,

@@ -15,7 +15,7 @@ class BorrowRequest extends Model
         "status",
         "notes",
         "user_id",
-        "approved_by"
+        "handled_by"
     ];
 
     public function user()
@@ -23,9 +23,9 @@ class BorrowRequest extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function approver()
+    public function handler()
     {
-        return $this->belongsTo(User::class, "approved_by");
+        return $this->belongsTo(User::class, "handled_by");
     }
 
     public function borrowDetails()

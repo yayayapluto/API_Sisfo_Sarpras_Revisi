@@ -18,10 +18,13 @@ class BorrowRequestFactory extends Factory
      */
     public function definition(): array
     {
+        $status = fake()->randomElement(["pending","approved","rejected"]);
+        $handled_by = $status !== "pending" ? User::query()->select("id")->inRandomOrder()->where("role","admin")->first() : null;
         return [
             "return_date_expected" => Carbon::now()->addDays(fake()->numberBetween(1, 3)),
-            "status" => fake()->randomElement(["pending","approved","rejected"]),
+            "status" => $status,
             "notes" => fake()->paragraph(),
+            "handled_by" => $handled_by,
             "user_id" => User::query()->select("id")->inRandomOrder()->where("role","user")->first(),
         ];
     }
