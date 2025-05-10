@@ -65,7 +65,14 @@ class ItemUnitController extends Controller
         $itemUnitQuery->orderBy($sortBy, $sortDir);
 
         $size = min(max(request()->size ?? 10, 1), 100);
+
         $itemUnits = $itemUnitQuery->simplePaginate($size);
+
+
+        foreach ($itemUnits as $key => $value) {
+            $itemUnits[$key]->qr_image_url = url($value->qr_image_url);
+        }
+
 
         return Formatter::apiResponse(200, 'Item unit list retrieved', $itemUnits);
     }
@@ -109,14 +116,18 @@ class ItemUnitController extends Controller
             }
 
             $renderer = new GDLibRenderer(400);
+            // $renderer = new ImageRenderer(
+            //     new RendererStyle(400),
+            //     new ImagickImageBackEnd()
+            // );
             $qrCode = new \BaconQrCode\Writer($renderer);
 
             $qrCodePath = 'qr-images/' . $sku . '.png';
 
-            $qrValue = url('/api/admin/itemUnits/' . $sku);
+            $qrValue = url($sku);
             $qrCode->writeFile($qrValue, storage_path('app/public/' . $qrCodePath));
 
-            $validated["qr_image_url"] = url(Storage::url($qrCodePath));
+            $validated["qr_image_url"] = Storage::url($qrCodePath); // url
 
             $newItemUnit = ItemUnit::query()->create($validated);
             $warehouse->update([
@@ -138,6 +149,7 @@ class ItemUnitController extends Controller
         if (is_null($itemUnit)) {
             return Formatter::apiResponse(404, "Item unit not found");
         }
+        $itemUnit->qr_image_url = url($itemUnit->qr_image_url);
         return Formatter::apiResponse(200, "Item unit found", $itemUnit);
     }
 

@@ -129,7 +129,7 @@ class ReturnRequestController extends Controller
      */
     public function show(int $id)
     {
-        $returnRequestQuery = ReturnRequest::query()->with(["borrowRequest.borrowDetails.itemUnit","returnDetails.itemUnit"]);
+        $returnRequestQuery = ReturnRequest::query()->with(["borrowRequest.borrowDetails.itemUnit.item","returnDetails.itemUnit.item"]);
 
         if (!is_null($this->currentUserId)) {
             $returnRequestQuery->join("borrow_requests", "return_requests.borrow_request_id", "=", "borrow_requests.id")->where("borrow_requests.user_id", $this->currentUserId);
