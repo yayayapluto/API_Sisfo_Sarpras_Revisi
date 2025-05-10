@@ -16,6 +16,7 @@ return new class extends Migration
             $table->enum("status", ["pending","approved","rejected"])->default("pending");
             $table->text("notes")->nullable();
             $table->foreignId("borrow_request_id")->constrained("borrow_requests")->cascadeOnDelete();
+            $table->foreignId("handled_by")->nullable()->constrained("users")->cascadeOnDelete();
             $table->timestamps();
         });
     }

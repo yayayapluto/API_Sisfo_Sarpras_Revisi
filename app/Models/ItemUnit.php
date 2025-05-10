@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ItemUnit extends Model
 {
     /** @use HasFactory<\Database\Factories\ItemUnitFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         "sku",

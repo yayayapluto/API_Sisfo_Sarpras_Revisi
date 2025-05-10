@@ -41,7 +41,7 @@ class ReturnRequestController extends Controller
         ];
 
         $validRelation = [
-            "borrowRequest","returnDetails"
+            "borrowRequest","returnDetails","handler"
         ];
 
         if (\request()->filled("with")) {
@@ -66,11 +66,7 @@ class ReturnRequestController extends Controller
         $size = min(max(request()->size ?? 10, 1), 100);
         $returnRequests = $returnRequestQuery->simplePaginate($size);
 
-        return response()->json([
-            'status' => 200,
-            'message' => 'Return request list retrieved',
-            'data' => $returnRequests
-        ]);
+        return Formatter::apiResponse(200, "Return request list retrieved", $returnRequests);
     }
 
     /**
@@ -133,7 +129,7 @@ class ReturnRequestController extends Controller
      */
     public function show(int $id)
     {
-        $returnRequestQuery = ReturnRequest::query()->with(["borrowRequest.user","returnDetails.itemUnit"]);
+        $returnRequestQuery = ReturnRequest::query()->with(["borrowRequest.borrowDetails.itemUnit","returnDetails.itemUnit"]);
 
         if (!is_null($this->currentUserId)) {
             $returnRequestQuery->join("borrow_requests", "return_requests.borrow_request_id", "=", "borrow_requests.id")->where("borrow_requests.user_id", $this->currentUserId);
