@@ -3,6 +3,10 @@
 ```sh
 cp .env.example .env
 ```
+### Install all packages
+```sh
+composer i
+```
 ### Migrate
 ```sh
 php artisan migrate
