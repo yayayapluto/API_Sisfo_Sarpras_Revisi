@@ -19,11 +19,12 @@ return new class extends Migration
             $table->string("acquisition_source");
             $table->date("acquisition_date");
             $table->text("acquisition_notes")->nullable();
-            $table->enum("status", ["available","borrowed","unknown"])->default("available");
+            $table->enum("status", ["available","borrowed","unknown","unavailable"])->default("available");
             $table->integer("quantity")->default(1); // misal item parent punya type consumable, maka bisa lebih dari 1, contoh: quantity dari 1 box pensil
             $table->string("qr_image_url");
             $table->foreignId("item_id")->constrained("items")->cascadeOnDelete();
             $table->foreignId("warehouse_id")->constrained("warehouses")->cascadeOnDelete();
+            $table->string("current_location")->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

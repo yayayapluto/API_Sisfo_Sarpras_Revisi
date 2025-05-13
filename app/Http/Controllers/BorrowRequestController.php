@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\BorrowRequestExport;
 
 class BorrowRequestController extends Controller
 {
@@ -84,7 +86,8 @@ class BorrowRequestController extends Controller
             "return_date_expected" => "required|date|after:today",
             "notes" => "sometimes|string",
             "sku" => "required|string",
-            "quantity" => "sometimes|int|min:1"
+            "quantity" => "sometimes|int|min:1",
+            "borrow_location" => "required|string"
         ]);
 
         if ($validator->fails()) {
@@ -104,6 +107,7 @@ class BorrowRequestController extends Controller
                 "return_date_expected" => $validated["return_date_expected"],
                 "notes" => $validated["notes"] ?? null,
                 "user_id" => $this->currentUserId,
+                "borrow_location" => $validated["borrow_location"]
             ]);
 
             foreach (explode(",", $validated["sku"]) as $sku) {
@@ -167,9 +171,19 @@ class BorrowRequestController extends Controller
 
         $borrowDetails = $borrowRequest->borrowDetails;
         foreach ($borrowDetails as $borrowDetail) {
-            $borrowDetail->itemUnit->update([
-                "status" => "borrowed"
-            ]);
+            $itemUnit = $borrowDetail->itemUnit;
+            if ($itemUnit->item->type === 'consumable') {
+                $newQty = $itemUnit->quantity - $borrowDetail->quantity;
+                $itemUnit->quantity = $newQty;
+                $itemUnit->status = $newQty <= 0 ? 'unavailable' : 'available';
+                $itemUnit->current_location = $borrowRequest->borrow_location;
+                $itemUnit->save();
+            } else {
+                $itemUnit->update([
+                    "status" => "borrowed",
+                    "current_location" => $borrowRequest->borrow_location
+                ]);
+            }
         }
 
         $borrowRequest->update([
@@ -193,5 +207,15 @@ class BorrowRequestController extends Controller
             "handled_by" => Auth::guard("sanctum")->user()->id
         ]);
         return Formatter::apiResponse(200, "Borrow request rejected", $borrowRequest->getChanges());
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $start = $request->query('start');
+        $end = $request->query('end');
+        if (!$start || !$end) {
+            return Formatter::apiResponse(422, 'Start and end date are required');
+        }
+        return Excel::download(new BorrowRequestExport($start, $end), 'borrow_requests.pdf', \Maatwebsite\Excel\Excel::DOMPDF);
     }
 }

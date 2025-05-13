@@ -10,6 +10,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\ItemImport;
 
 class ItemController extends Controller
 {
@@ -185,5 +187,21 @@ class ItemController extends Controller
 
         $item->update($validated);
         return Formatter::apiResponse(200, "Image updated", Item::query()->find($item->id));
+    }
+
+    public function importItems(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,csv',
+        ]);
+        try {
+            \DB::beginTransaction();
+            Excel::import(new ItemImport, $request->file('file'));
+            \DB::commit();
+            return Formatter::apiResponse(200, 'Items imported successfully');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return Formatter::apiResponse(422, 'Import failed', null, [$e->getMessage()]);
+        }
     }
 }

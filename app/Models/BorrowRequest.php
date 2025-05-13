@@ -15,7 +15,8 @@ class BorrowRequest extends Model
         "status",
         "notes",
         "user_id",
-        "handled_by"
+        "handled_by",
+        "borrow_location"
     ];
 
     public function user()

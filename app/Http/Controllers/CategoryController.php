@@ -7,6 +7,8 @@ use App\Models\Category;
 use Dotenv\Validator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\CategoryImport;
 
 class CategoryController extends Controller
 {
@@ -149,5 +151,21 @@ class CategoryController extends Controller
         }
         $category->delete();
         return Formatter::apiResponse(200, "Category deleted");
+    }
+
+    public function importCategories(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,csv',
+        ]);
+        try {
+            \DB::beginTransaction();
+            Excel::import(new CategoryImport, $request->file('file'));
+            \DB::commit();
+            return Formatter::apiResponse(200, 'Categories imported successfully');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return Formatter::apiResponse(422, 'Import failed', null, [$e->getMessage()]);
+        }
     }
 }

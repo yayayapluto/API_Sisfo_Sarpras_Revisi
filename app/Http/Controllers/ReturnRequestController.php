@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use function PHPUnit\Framework\isNull;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ReturnRequestExport;
 
 class ReturnRequestController extends Controller
 {
@@ -154,7 +156,18 @@ class ReturnRequestController extends Controller
         $borrowRequest = BorrowRequest::query()->find($returnRequest->borrowRequest->id);
         $borrowDetails = $borrowRequest->borrowDetails;
         foreach ($borrowDetails as $borrowDetail) {
-            $borrowDetail->status = "available";
+            $itemUnit = $borrowDetail->itemUnit;
+            if ($itemUnit->item->type === 'consumable') {
+                $itemUnit->quantity += $borrowDetail->quantity;
+                $itemUnit->status = $itemUnit->quantity > 0 ? 'available' : 'unavailable';
+                $itemUnit->current_location = $itemUnit->warehouse->location;
+                $itemUnit->save();
+            } else {
+                $itemUnit->update([
+                    "status" => "available",
+                    "current_location" => $itemUnit->warehouse->location
+                ]);
+            }
         }
 
         if (is_null($returnRequest)) {
@@ -193,5 +206,15 @@ class ReturnRequestController extends Controller
             "status" => "rejected"
         ]);
         return Formatter::apiResponse(200, "Return request approved");
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $start = $request->query('start');
+        $end = $request->query('end');
+        if (!$start || !$end) {
+            return Formatter::apiResponse(422, 'Start and end date are required');
+        }
+        return Excel::download(new ReturnRequestExport($start, $end), 'return_requests.pdf', \Maatwebsite\Excel\Excel::DOMPDF);
     }
 }

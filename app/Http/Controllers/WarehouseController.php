@@ -7,6 +7,8 @@ use App\Models\Warehouse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use function PHPUnit\Framework\isEmpty;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\WarehouseImport;
 
 class WarehouseController extends Controller
 {
@@ -107,5 +109,21 @@ class WarehouseController extends Controller
         }
         $warehouse->delete();
         return Formatter::apiResponse(200, "Warehouse deleted");
+    }
+
+    public function importWarehouses(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,csv',
+        ]);
+        try {
+            \DB::beginTransaction();
+            Excel::import(new WarehouseImport, $request->file('file'));
+            \DB::commit();
+            return Formatter::apiResponse(200, 'Warehouses imported successfully');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return Formatter::apiResponse(422, 'Import failed', null, [$e->getMessage()]);
+        }
     }
 }

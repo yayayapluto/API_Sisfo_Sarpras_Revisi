@@ -22,7 +22,8 @@ class ItemUnit extends Model
         "quantity",
         "qr_image_url",
         "item_id",
-        "warehouse_id"
+        "warehouse_id",
+        "current_location"
     ];
 
     public function item()

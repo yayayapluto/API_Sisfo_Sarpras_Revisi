@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\UserImport;
 
 class UserController extends Controller
 {
@@ -109,5 +111,21 @@ class UserController extends Controller
 
         $user->delete();
         return Formatter::apiResponse(200, 'User deleted');
+    }
+
+    public function importUsers(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,csv',
+        ]);
+        try {
+            \DB::beginTransaction();
+            Excel::import(new UserImport, $request->file('file'));
+            \DB::commit();
+            return Formatter::apiResponse(200, 'Users imported successfully');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return Formatter::apiResponse(422, 'Import failed', null, [$e->getMessage()]);
+        }
     }
 }

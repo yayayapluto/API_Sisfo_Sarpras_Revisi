@@ -16,6 +16,7 @@ return new class extends Migration
             $table->integer("quantity")->default(1);
             $table->foreignId("borrow_request_id")->constrained("borrow_requests")->cascadeOnDelete();
             $table->foreignId("item_unit_id")->constrained("item_units")->cascadeOnDelete();
+            $table->string("borrow_location");
             $table->timestamps();
         });
     }

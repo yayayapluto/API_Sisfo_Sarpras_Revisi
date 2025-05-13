@@ -17,6 +17,8 @@ use App\Custom\Formatter;
 use Endroid\QrCode\QrCode;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\ItemUnitImport;
 
 class ItemUnitController extends Controller
 {
@@ -87,7 +89,8 @@ class ItemUnitController extends Controller
             "acquisition_notes" => "sometimes|string",
             "quantity" => "required|integer|min:1",
             "item_id" => "required|integer|exists:items,id",
-            "warehouse_id" => "required|integer|exists:warehouses,id"
+            "warehouse_id" => "required|integer|exists:warehouses,id",
+            "current_location" => "required|string"
         ]);
 
         if ($validator->fails()) {
@@ -191,5 +194,21 @@ class ItemUnitController extends Controller
         }
         $itemUnit->delete();
         return Formatter::apiResponse(200, "Item unit deleted");
+    }
+
+    public function importItemUnits(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,csv',
+        ]);
+        try {
+            \DB::beginTransaction();
+            Excel::import(new ItemUnitImport, $request->file('file'));
+            \DB::commit();
+            return Formatter::apiResponse(200, 'Item units imported successfully');
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return Formatter::apiResponse(422, 'Import failed', null, [$e->getMessage()]);
+        }
     }
 }
