@@ -52,6 +52,11 @@ class ItemController extends Controller
         $size = min(max(request()->size ?? 10, 1), 100);
         $items = $itemQuery->simplePaginate($size);
 
+//        dd($items->items()[0]->image_url);
+        foreach ($items->items() as $key => $value) {
+            $items[$key]->image_url = url($items[$key]->image_url);
+        }
+
         return Formatter::apiResponse(200, 'Item list retrieved', $items);
     }
 
@@ -80,7 +85,7 @@ class ItemController extends Controller
             if (!$storedPath) {
                 return Formatter::apiResponse(400, "Cannot upload image, please try again later");
             }
-            $validated["image_url"] = url(Storage::url($storedPath));
+            $validated["image_url"] = Storage::url($storedPath);
         }
 
         $newItem = Item::query()->create($validated);
@@ -90,6 +95,7 @@ class ItemController extends Controller
     public function show(int $id)
     {
         $item = Item::query()->with(["category", "itemUnits.item", "itemUnits.warehouse"])->find($id);
+        $item->image_url = url($item->image_url);
         if (is_null($item)) {
             return Formatter::apiResponse(404, "Item not found");
         }

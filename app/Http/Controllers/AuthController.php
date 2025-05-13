@@ -31,7 +31,7 @@ class AuthController extends Controller
         $token = $user->createToken("auth_token")->plainTextToken;
         return Formatter::apiResponse(200, "Logged in", [
             "token" => $token,
-            "role" => $user->role
+            "user" => $user
         ]);
     }
 

@@ -32,11 +32,11 @@ class DatabaseSeeder extends Seeder
             'role' => "admin",
         ]);
 
-        // User::query()->create([
-        //     'username' => "user",
-        //     'password' => Hash::make("user123"),
-        //     'role' => "user",
-        // ]);
+//         User::query()->create([
+//             'username' => "user",
+//             'password' => Hash::make("user123"),
+//             'role' => "user",
+//         ]);
 
         // User::query()->create([
         //     'username' => "user1",
@@ -45,16 +45,16 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         Category::query()->truncate();
-        // Category::factory(3)->create();
+//         Category::factory(3)->create();
 
         Warehouse::query()->truncate();
-        // Warehouse::factory(2)->create();
+//         Warehouse::factory(2)->create();
 
         Item::query()->truncate();
-        // Item::factory(5)->create();
+//         Item::factory(5)->create();
 
         ItemUnit::query()->truncate();
-        // ItemUnit::factory(30)->create();
+//         ItemUnit::factory(91)->create();
 
         BorrowRequest::query()->truncate();
         BorrowDetail::query()->truncate();
