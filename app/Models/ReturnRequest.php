@@ -21,7 +21,7 @@ class ReturnRequest extends Model
 
     public function returnDetails()
     {
-        return $this->hasMany(ReturnDetail::class, "return_request_id");
+        return $this->hasMany(ReturnDetail::class);
     }
 
     public function handler()

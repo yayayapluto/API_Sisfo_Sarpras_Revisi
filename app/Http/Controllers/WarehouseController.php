@@ -76,6 +76,11 @@ class WarehouseController extends Controller
         if (is_null($warehouse)) {
             return Formatter::apiResponse(404, "Warehouse not found");
         }
+
+        foreach ($warehouse->itemUnits as $itemUnit) {
+            $itemUnit->qr_image_url = url($itemUnit->qr_image_url);
+        }
+
         return Formatter::apiResponse(200, "Warehouse found", $warehouse);
     }
 

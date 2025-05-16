@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\BorrowRequest;
+use Illuminate\Support\Facades\Date;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -26,18 +27,16 @@ class BorrowRequestExport implements FromCollection, WithHeadings, WithMapping, 
     public function collection()
     {
         return BorrowRequest::with(['user', 'handler'])
-            ->whereDate('created_at', '>=', $this->start)
-            ->whereDate('created_at', '<=', $this->end)
+            ->whereDate('created_at', '>=', Date::make($this->start))
+            ->whereDate('created_at', '<=', Date::make($this->end))
             ->get();
     }
 
     public function headings(): array
     {
         return [
-            ['PT. Nama Perusahaan'],
             ['Laporan Permintaan Peminjaman Barang'],
             ["Periode: {$this->start} s/d {$this->end}"],
-            [],
             ['No', 'Tanggal', 'User', 'Status', 'Handled By', 'Notes', 'Tanggal Kembali', 'Created At'],
         ];
     }

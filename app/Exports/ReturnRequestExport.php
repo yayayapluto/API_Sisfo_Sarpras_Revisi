@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\ReturnRequest;
+use Illuminate\Support\Facades\Date;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -26,8 +27,8 @@ class ReturnRequestExport implements FromCollection, WithHeadings, WithMapping, 
     public function collection()
     {
         return ReturnRequest::with(['borrowRequest.user', 'handler'])
-            ->whereDate('created_at', '>=', $this->start)
-            ->whereDate('created_at', '<=', $this->end)
+            ->whereDate('created_at', '>=', Date::make($this->start))
+            ->whereDate('created_at', '<=', Date::make($this->end))
             ->get();
     }
 

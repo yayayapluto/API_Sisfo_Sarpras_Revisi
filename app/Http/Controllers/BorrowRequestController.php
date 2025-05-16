@@ -85,7 +85,8 @@ class BorrowRequestController extends Controller
         $validator = Validator::make($request->all(), [
             "return_date_expected" => "required|date|after:today",
             "notes" => "sometimes|string",
-            "sku" => "required|string",
+            "sku_list" => "required|string",
+            "quantity_list" => "required|string",
             "quantity" => "sometimes|int|min:1",
             "borrow_location" => "required|string"
         ]);
@@ -110,22 +111,27 @@ class BorrowRequestController extends Controller
                 "borrow_location" => $validated["borrow_location"]
             ]);
 
-            foreach (explode(",", $validated["sku"]) as $sku) {
+            $validated["quantity_list"] = explode(",", $validated["quantity_list"]);
+
+            foreach (explode(",", $validated["sku_list"]) as $index => $sku) {
                 $itemUnit = ItemUnit::query()->where("sku", $sku)->first();
                 if (is_null($itemUnit)) {
                     return Formatter::apiResponse(404, "Item unit not found");
                 }
-                if ($itemUnit->item->type === "non-consumable") $validated["quantity"] = 1;
-                if ($itemUnit->quantity === 0 || $itemUnit->quantity < $validated["quantity"] ?? 1) {
+
+                if ($itemUnit->item->type === "non-consumable") $validated["quantity_list"][$index] = 1;
+                if ($itemUnit->quantity === 0 || $itemUnit->quantity < $validated["quantity_list"][$index] ?? 1) {
                     DB::rollBack();
                     return Formatter::apiResponse(400, "itemUnit with sku:" . $sku . " quantity is lower than requested");
                 }
+
                 if ($itemUnit->status !== "available") {
                     DB::rollBack();
                     return Formatter::apiResponse(400, "itemUnit not available");
                 }
+
                 BorrowDetail::query()->create([
-                    "quantity" => $validated["quantity"] ?? 1,
+                    "quantity" => $validated["quantity_list"][$index],
                     "borrow_request_id" => $newBorrowRequest->id,
                     "item_unit_id" => $itemUnit->id
                 ]);
@@ -152,6 +158,9 @@ class BorrowRequestController extends Controller
         }
 
         $borrowRequest = $borrowRequestQuery->find($id);
+        foreach ($borrowRequest->borrowDetails as $detail) {
+            $detail->itemUnit->item->image_url = url($detail->itemUnit->item->image_url);
+        }
 
         if (is_null($borrowRequest)) {
             return Formatter::apiResponse(404, "Borrow request not found");
@@ -216,6 +225,13 @@ class BorrowRequestController extends Controller
         if (!$start || !$end) {
             return Formatter::apiResponse(422, 'Start and end date are required');
         }
-        return Excel::download(new BorrowRequestExport($start, $end), 'borrow_requests.pdf', \Maatwebsite\Excel\Excel::DOMPDF);
+        $fileName = 'borrow_requests_' . Formatter::makeDash($start) . '_to_' . Formatter::makeDash($end) . '.xlsx';
+        $filePath = 'reports/' . $fileName;
+        try {
+            Excel::store(new BorrowRequestExport($start, $end), $filePath, "public");
+        } catch (\Exception $e) {
+            return Formatter::apiResponse(500, 'Failed to store excel file', null, $e->getMessage());
+        }
+        return Formatter::apiResponse(200, 'Borrow request report saved successfully', url('storage/reports/' . $fileName));
     }
 }

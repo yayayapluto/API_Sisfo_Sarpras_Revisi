@@ -20,10 +20,10 @@ Route::middleware("need-token")->group(function () {
    Route::prefix("admin")->middleware("role:admin")->group(function () {
       Route::apiResource("users", \App\Http\Controllers\UserController::class);
       Route::post('users/import', [\App\Http\Controllers\UserController::class, 'importUsers']);
-      
+
       Route::apiResource("warehouses", \App\Http\Controllers\WarehouseController::class);
       Route::post('warehouses/import', [\App\Http\Controllers\WarehouseController::class, 'importWarehouses']);
-      
+
       Route::apiResource("categories", \App\Http\Controllers\CategoryController::class);
       Route::post('categories/import', [\App\Http\Controllers\CategoryController::class, 'importCategories']);
 
@@ -37,20 +37,15 @@ Route::middleware("need-token")->group(function () {
       Route::apiResource("borrow-requests", \App\Http\Controllers\BorrowRequestController::class)->only(["index","show"]);
       Route::patch("borrow-requests/{id}/approve", [\App\Http\Controllers\BorrowRequestController::class, "approve"]);
       Route::patch("borrow-requests/{id}/reject", [\App\Http\Controllers\BorrowRequestController::class, "reject"]);
+      Route::get('borrow-requests/export/pdf', [\App\Http\Controllers\BorrowRequestController::class, 'exportPdf']);
+
 
        Route::apiResource("return-requests", \App\Http\Controllers\ReturnRequestController::class)->only(["index","show"]);
        Route::patch("return-requests/{id}/approve", [\App\Http\Controllers\ReturnRequestController::class, "approve"]);
        Route::patch("return-requests/{id}/reject", [\App\Http\Controllers\ReturnRequestController::class, "reject"]);
+       Route::get('return-requests/export/pdf', [\App\Http\Controllers\ReturnRequestController::class, 'exportPdf']);
 
       Route::apiResource("logs", \App\Http\Controllers\LogActivityController::class)->only(["index","show"]);
-
-      Route::apiResource("borrowRequests", \App\Http\Controllers\BorrowRequestController::class);
-      Route::post('borrowRequests/import', [\App\Http\Controllers\BorrowRequestController::class, 'importBorrowRequests']);
-      Route::get('borrowRequests/export/pdf', [\App\Http\Controllers\BorrowRequestController::class, 'exportPdf']);
-      
-      Route::apiResource("returnRequests", \App\Http\Controllers\ReturnRequestController::class);
-      Route::post('returnRequests/import', [\App\Http\Controllers\ReturnRequestController::class, 'importReturnRequests']);
-      Route::get('returnRequests/export/pdf', [\App\Http\Controllers\ReturnRequestController::class, 'exportPdf']);
 
       Route::prefix('dashboard')->group(function () {
         Route::get('entity-counts', [\App\Http\Controllers\DashboardController::class, 'entityCounts']);

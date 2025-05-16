@@ -153,6 +153,7 @@ class ItemUnitController extends Controller
             return Formatter::apiResponse(404, "Item unit not found");
         }
         $itemUnit->qr_image_url = url($itemUnit->qr_image_url);
+        $itemUnit->item->image_url = url($itemUnit->item->image_url);
         return Formatter::apiResponse(200, "Item unit found", $itemUnit);
     }
 

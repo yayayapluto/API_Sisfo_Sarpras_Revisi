@@ -98,6 +98,11 @@ class ItemController extends Controller
     {
         $item = Item::query()->with(["category", "itemUnits.item", "itemUnits.warehouse"])->find($id);
         $item->image_url = url($item->image_url);
+
+        foreach ($item->itemUnits as $unit) {
+            $unit->qr_image_url = url($unit->qr_image_url);
+        }
+
         if (is_null($item)) {
             return Formatter::apiResponse(404, "Item not found");
         }

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text("notes")->nullable();
             $table->foreignId("user_id")->constrained("users")->cascadeOnDelete();
             $table->foreignId("handled_by")->nullable()->constrained("users")->cascadeOnDelete();
+            $table->string("borrow_location");
             $table->timestamps();
         });
     }

@@ -122,17 +122,11 @@ class DashboardController extends Controller
 
     public function alerts()
     {
-        $pendingBorrow = BorrowRequest::where('status', 'pending')->count();
-        $pendingReturn = ReturnRequest::where('status', 'pending')->count();
-        $overCapacity = Warehouse::with('itemUnits')->get()->filter(function($w){
-            return $w->itemUnits->sum('quantity') > $w->capacity;
-        })->values();
-        $lowStock = ItemUnit::where('quantity', '<', 5)->with('item')->get();
-        return Formatter::apiResponse(200, 'Alerts', [
-            'pending_borrow_requests' => $pendingBorrow,
-            'pending_return_requests' => $pendingReturn,
-            'warehouses_over_capacity' => $overCapacity,
-            'low_stock_items' => $lowStock,
+        $pendingBorrow = BorrowRequest::query()->where('status', 'pending')->with(["user", "borrowDetails"])->simplePaginate(5);
+        $pendingReturn = ReturnRequest::query()->where('status', 'pending')->with(["borrowRequest.user","returnDetails"])->simplePaginate(5);
+        return Formatter::apiResponse(200, 'Pending Requests', [
+            "pending_borrow_requests" => $pendingBorrow,
+            "pending_return_requests" => $pendingReturn
         ]);
     }
-} 
+}

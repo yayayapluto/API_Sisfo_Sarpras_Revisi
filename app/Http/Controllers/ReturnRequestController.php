@@ -110,6 +110,7 @@ class ReturnRequestController extends Controller
             $newReturnRequest = ReturnRequest::query()->create($validator->validated());
 
             $borrowDetails = $borrowRequest->borrowDetails;
+
             foreach ($borrowDetails as $borrowDetail) {
                 ReturnDetail::query()->create([
                     "item_unit_id" => $borrowDetail->item_unit_id,
@@ -142,6 +143,15 @@ class ReturnRequestController extends Controller
         if (is_null($returnRequest)) {
             return Formatter::apiResponse(404, "Return request not found");
         }
+
+        foreach ($returnRequest->returnDetails as $returnDetail) {
+            $returnDetail->itemUnit->item->image_url = url($returnDetail->itemUnit->item->image_url);
+        }
+
+        foreach ($returnRequest->borrowRequest->borrowDetails as $borrowDetail) {
+            $borrowDetail->itemUnit->item->image_url = url($borrowDetail->itemUnit->item->image_url);
+        }
+
         return Formatter::apiResponse(200, "Return request found", $returnRequest);
     }
 
@@ -215,6 +225,13 @@ class ReturnRequestController extends Controller
         if (!$start || !$end) {
             return Formatter::apiResponse(422, 'Start and end date are required');
         }
-        return Excel::download(new ReturnRequestExport($start, $end), 'return_requests.pdf', \Maatwebsite\Excel\Excel::DOMPDF);
+        $fileName = 'return_requests_' . Formatter::makeDash($start) . '_to_' . Formatter::makeDash($end) . '.xlsx';
+        $filePath = 'reports/' . $fileName;
+        try {
+            Excel::store(new ReturnRequestExport($start, $end), $filePath, "public");
+        } catch (\Exception $e) {
+            return Formatter::apiResponse(500, 'Failed to store excel file', null, $e->getMessage());
+        }
+        return Formatter::apiResponse(200, 'Return request report saved successfully', url('storage/reports/' . $fileName));
     }
 }

@@ -104,6 +104,11 @@ class CategoryController extends Controller
         if (is_null($category)) {
             return Formatter::apiResponse(404, "Category not found");
         }
+
+        foreach ($category->items as $item) {
+            $item->image_url = url($item->image_url);
+        }
+
         return Formatter::apiResponse(200, "Category found", $category);
     }
 

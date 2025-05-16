@@ -19,6 +19,6 @@ class ReturnDetail extends Model
 
     public function returnRequest()
     {
-        return $this->belongsTo(ReturnRequest::class, "return_request_id");
+        return $this->belongsTo(ReturnRequest::class);
     }
 }
