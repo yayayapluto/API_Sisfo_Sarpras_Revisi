@@ -28,8 +28,8 @@ Route::middleware("need-token")->group(function () {
       Route::post('categories/import', [\App\Http\Controllers\CategoryController::class, 'importCategories']);
 
       Route::apiResource("items", \App\Http\Controllers\ItemController::class)->except(["update"]);
-      Route::post("items/{id}", [\App\Http\Controllers\ItemController::class, "update"]);
       Route::post('items/import', [\App\Http\Controllers\ItemController::class, 'importItems']);
+      Route::post("items/{id}", [\App\Http\Controllers\ItemController::class, "update"]);
 
       Route::apiResource("itemUnits", \App\Http\Controllers\ItemUnitController::class);
       Route::post('itemUnits/import', [\App\Http\Controllers\ItemUnitController::class, 'importItemUnits']);

@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Custom\Formatter;
 use App\Models\ItemUnit;
 use App\Models\Item;
 use App\Models\Warehouse;
@@ -14,7 +15,6 @@ class ItemUnitImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         $validator = Validator::make($row, [
-            'sku' => 'required|string|unique:item_units,sku',
             'condition' => 'required|string',
             'notes' => 'nullable|string',
             'acquisition_source' => 'required|string',
@@ -23,17 +23,17 @@ class ItemUnitImport implements ToModel, WithHeadingRow
             'status' => 'required|in:available,borrowed,unknown,unavailable',
             'quantity' => 'required|integer|min:1',
             'qr_image_url' => 'required|string',
-            'item_name' => 'required|exists:items,name',
-            'warehouse_name' => 'required|exists:warehouses,name',
+            'item_id' => 'required|exists:items,id',
+            'warehouse_id' => 'required|exists:warehouses,id',
             'current_location' => 'nullable|string',
         ]);
         if ($validator->fails()) {
             throw new \Exception('Row validation failed: ' . json_encode($validator->errors()->all()));
         }
-        $item_id = Item::where('name', $row['item_name'])->value('id');
-        $warehouse_id = Warehouse::where('name', $row['warehouse_name'])->value('id');
+        $item = Item::query()->find($row["item_id"]);
+        $warehouse = Warehouse::query()->find($row["warehouse_id"]);
         return new ItemUnit([
-            'sku' => $row['sku'],
+            'sku' => Formatter::makeDash($warehouse->name) . "-" . Formatter::makeDash($item->name) . "-" . ($item->itemUnits->sum('quantity') + 1),
             'condition' => $row['condition'],
             'notes' => $row['notes'] ?? null,
             'acquisition_source' => $row['acquisition_source'],
@@ -42,10 +42,9 @@ class ItemUnitImport implements ToModel, WithHeadingRow
             'status' => $row['status'],
             'quantity' => $row['quantity'],
             'qr_image_url' => $row['qr_image_url'],
-            'item_id' => $item_id,
-            'warehouse_id' => $warehouse_id,
+            'item_id' => $item->id,
+            'warehouse_id' => $warehouse->id,
             'current_location' => $row['current_location'] ?? null,
         ]);
     }
 }
- 

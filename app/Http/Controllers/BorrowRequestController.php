@@ -30,7 +30,7 @@ class BorrowRequestController extends Controller
      */
     public function index()
     {
-        $borrowRequestQuery = BorrowRequest::query();
+        $borrowRequestQuery = BorrowRequest::query()->with("returnRequest");
 
         $validColumns = [
             "return_date_expected",

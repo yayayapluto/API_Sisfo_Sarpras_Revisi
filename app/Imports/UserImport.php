@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Custom\Formatter;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -16,7 +17,7 @@ class UserImport implements ToModel, WithHeadingRow
             'username' => 'required|string|min:3|unique:users,username',
             'password' => 'required|string|min:8',
             'email' => 'nullable|email|unique:users,email',
-            'phone' => 'nullable|string|min:10|unique:users,phone',
+            'phone' => 'nullable|min:10|unique:users,phone',
             'role' => 'required|in:user,admin',
         ]);
         if ($validator->fails()) {
@@ -30,4 +31,4 @@ class UserImport implements ToModel, WithHeadingRow
             'role' => $row['role'],
         ]);
     }
-} 
+}

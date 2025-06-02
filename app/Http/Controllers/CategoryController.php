@@ -167,7 +167,7 @@ class CategoryController extends Controller
             \DB::beginTransaction();
             Excel::import(new CategoryImport, $request->file('file'));
             \DB::commit();
-            return Formatter::apiResponse(200, 'Categories imported successfully');
+            return Formatter::apiResponse(200, 'Categories imported successfully', []);
         } catch (\Exception $e) {
             \DB::rollBack();
             return Formatter::apiResponse(422, 'Import failed', null, [$e->getMessage()]);

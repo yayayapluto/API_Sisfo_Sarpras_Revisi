@@ -125,7 +125,7 @@ class WarehouseController extends Controller
             \DB::beginTransaction();
             Excel::import(new WarehouseImport, $request->file('file'));
             \DB::commit();
-            return Formatter::apiResponse(200, 'Warehouses imported successfully');
+            return Formatter::apiResponse(200, 'Warehouses imported successfully', []);
         } catch (\Exception $e) {
             \DB::rollBack();
             return Formatter::apiResponse(422, 'Import failed', null, [$e->getMessage()]);

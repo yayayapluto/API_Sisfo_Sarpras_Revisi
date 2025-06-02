@@ -14,7 +14,7 @@ class LogActivityController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $logQuery = LogActivity::query();
+        $logQuery = LogActivity::query()->with("performer");
         $validColumns = [
             'entity', 'type', 'ip_address', 'user_agent', 'performed_by'
         ];

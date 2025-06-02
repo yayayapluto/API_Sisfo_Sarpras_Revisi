@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Custom\Formatter;
 use App\Models\Category;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -12,7 +13,6 @@ class CategoryImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         $validator = Validator::make($row, [
-            'slug' => 'required|string|unique:categories,slug',
             'name' => 'required|string|unique:categories,name',
             'description' => 'nullable|string',
         ]);
@@ -20,9 +20,9 @@ class CategoryImport implements ToModel, WithHeadingRow
             throw new \Exception('Row validation failed: ' . json_encode($validator->errors()->all()));
         }
         return new Category([
-            'slug' => $row['slug'],
+            'slug' => Formatter::makeDash($row['name']),
             'name' => $row['name'],
             'description' => $row['description'] ?? null,
         ]);
     }
-} 
+}

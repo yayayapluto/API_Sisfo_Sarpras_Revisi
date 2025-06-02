@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\ItemUnit;
 use App\Models\LogActivity;
+use Illuminate\Support\Facades\Auth;
 
 class ItemUnitObserver
 {
@@ -13,7 +14,7 @@ class ItemUnitObserver
 
     public function __construct()
     {
-        $this->performedBy = request()->user()->id ?? null;
+        $this->performedBy = Auth::guard("sanctum")->user()->id ?? null;
         $this->userIpAddress = request()->ip();
         $this->userAgent = request()->userAgent();
     }

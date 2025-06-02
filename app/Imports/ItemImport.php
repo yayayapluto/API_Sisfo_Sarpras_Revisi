@@ -16,7 +16,6 @@ class ItemImport implements ToModel, WithHeadingRow
             'name' => 'required|string|unique:items,name',
             'type' => 'required|in:consumable,non-consumable',
             'description' => 'nullable|string',
-            'image_url' => 'nullable|string',
             'category_slug' => 'required|exists:categories,slug',
         ]);
         if ($validator->fails()) {
@@ -27,8 +26,7 @@ class ItemImport implements ToModel, WithHeadingRow
             'name' => $row['name'],
             'type' => $row['type'],
             'description' => $row['description'] ?? null,
-            'image_url' => $row['image_url'] ?? null,
             'category_id' => $category_id,
         ]);
     }
-} 
+}

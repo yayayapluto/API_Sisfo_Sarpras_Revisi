@@ -122,10 +122,10 @@ class UserController extends Controller
             \DB::beginTransaction();
             Excel::import(new UserImport, $request->file('file'));
             \DB::commit();
-            return Formatter::apiResponse(200, 'Users imported successfully');
+            return Formatter::apiResponse(200, 'Users imported successfully', []);
         } catch (\Exception $e) {
             \DB::rollBack();
-            return Formatter::apiResponse(422, 'Import failed', null, [$e->getMessage()]);
+            return Formatter::apiResponse(422, 'Import failed', null, $e->getMessage());
         }
     }
 }

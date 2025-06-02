@@ -32,11 +32,11 @@ class DatabaseSeeder extends Seeder
             'role' => "admin",
         ]);
 
-//         User::query()->create([
-//             'username' => "user",
-//             'password' => Hash::make("user123"),
-//             'role' => "user",
-//         ]);
+         User::query()->create([
+             'username' => "farras",
+             'password' => Hash::make("farras123"),
+             'role' => "user",
+         ]);
 
         // User::query()->create([
         //     'username' => "user1",

@@ -203,7 +203,7 @@ class ItemController extends Controller
             \DB::beginTransaction();
             Excel::import(new ItemImport, $request->file('file'));
             \DB::commit();
-            return Formatter::apiResponse(200, 'Items imported successfully');
+            return Formatter::apiResponse(200, 'Items imported successfully', []);
         } catch (\Exception $e) {
             \DB::rollBack();
             return Formatter::apiResponse(422, 'Import failed', null, [$e->getMessage()]);
